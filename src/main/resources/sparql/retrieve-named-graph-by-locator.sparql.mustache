@@ -1,0 +1,11 @@
+PREFIX onto: <http://www.ontotext.com/>
+PREFIX cms: <http://www.bbc.co.uk/ontologies/cms/> 
+CONSTRUCT { ?s ?p ?o . }
+FROM onto:explicit
+WHERE { 
+  GRAPH ?graph {
+    ?s ?p ?o .
+    ?thing cms:locator ?locator .
+    FILTER ({{#locators}}?locator = <{{ . }}>{{^-last}} || {{/-last}}{{/locators}})
+  }
+}

@@ -1,0 +1,10 @@
+PREFIX audit: <http://www.bbc.co.uk/ontologies/audit/>
+
+SELECT ?version
+WHERE {
+  ?audit a audit:Update ;
+    audit:updateVersion ?version ;
+    audit:occurredDate ?occurred .
+}
+ORDER BY DESC(?occurred)
+LIMIT 1

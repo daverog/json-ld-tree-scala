@@ -1,0 +1,8 @@
+@prefix audit: <{{ prefix }}> .
+@prefix xsd:<http://www.w3.org/2001/XMLSchema#> .
+
+<urn:ldp-event:{{ guid }}> a audit:Update ;
+  audit:updateSpecification """{{ updateSpecification }}""" ;
+  audit:updateVersion "{{ updateVersion }}" ;
+  audit:instigator "{{ instigator }}" ;
+  audit:occurredDate "{{ occurredDate }}"^^xsd:dateTime .

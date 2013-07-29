@@ -1,0 +1,37 @@
+<% import bbc.linkeddata.writer.api.docs.Documentation._ %>
+<%@ val apis: List[Api] %>
+<%@ val baseUrl: String %>
+
+{
+    "apiVersion": "1",
+    "basePath": "${baseUrl}",
+    "resourcePath": "/",
+    "swaggerVersion": "1.0",
+    "apis": [
+        #for (api <- apis)
+        {
+            "path": "${api.path}",
+            "operations": [
+                #for (operation <- api.operations)
+                {
+                    "httpMethod": "${operation.method}",
+                    "nickname": "${operation.nickname}",
+                    "summary": "${operation.summary}",
+                    "parameters": [
+                        #for (parameter <- operation.parameters)
+                        {
+                            "description": "${parameter.description}",
+                            "dataType": "${parameter.dataType}", 
+                            "name": "${parameter.name}",
+                            "paramType": "${parameter.paramType}",
+                            "required": ${parameter.required}
+                        #if (parameter == operation.parameters.last) } #else }, #end
+                        #end
+                    ]
+                #if (operation == api.operations.last) } #else }, #end
+                #end
+            ]
+        #if (api == apis.last) } #else }, #end
+        #end
+    ]
+}

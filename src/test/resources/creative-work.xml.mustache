@@ -1,0 +1,28 @@
+<creativeWork {{#guid}}guid="{{ . }}"{{/guid}} {{#type}}type="{{ . }}"{{/type}} {{#modified}}modified="{{ . }}"{{/modified}} {{#created}}created="{{ . }}"{{/created}}>
+	{{#title}}<title>{{ . }}</title>{{/title}}
+	{{#shortTitle}}<shortTitle>{{ . }}</shortTitle>{{/shortTitle}}
+    {{#description}}<description>{{ . }}</description>{{/description}}
+	{{#locators}}
+		{{#-first}}<locators>{{/-first}}
+			<locator {{#locatorType}}type="{{ locatorType }}"{{/locatorType}}>{{ locator }}</locator>
+		{{#-last}}</locators>{{/-last}}
+	{{/locators}}
+	{{#audience}}<audience>{{ . }}</audience>{{/audience}}
+	{{#category}}<category>{{ . }}</category>{{/category}}
+	{{#format}}<format>{{ . }}</format>{{/format}}
+	<tags>
+		{{#tags}}<tag {{#tagType}}type="{{ tagType }}"{{/tagType}}>{{ tag }}</tag>{{/tags}}
+	</tags>
+	{{#primaryContentOf}}
+		{{#-first}}<primaryContentOf>{{/-first}}
+    	<webDocument {{#pcoType}}type="{{ . }}"{{/pcoType}}>{{ url }}</webDocument>
+  		{{#-last}}</primaryContentOf>{{/-last}}
+	{{/primaryContentOf}}
+	{{#thumbnails}}
+		{{#-first}}<thumbnails>{{/-first}}
+		<thumbnail {{#alt}}altText="{{ alt }}"{{/alt}} {{#thumbnailType}}type="{{ thumbnailType }}"{{/thumbnailType}}>
+			{{ url }}
+		</thumbnail>
+		{{#-last}}</thumbnails>{{/-last}}
+	{{/thumbnails}}
+</creativeWork>

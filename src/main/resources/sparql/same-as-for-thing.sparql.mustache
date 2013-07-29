@@ -1,0 +1,7 @@
+PREFIX core:<http://www.bbc.co.uk/ontologies/coreconcepts/>
+
+SELECT ?graph ?sameAs WHERE { 
+  GRAPH ?graph { 
+    <{{ thingUri }}> core:sameAs ?sameAs 
+  }
+}

@@ -1,0 +1,12 @@
+PREFIX audit: <http://www.bbc.co.uk/ontologies/audit/>
+
+SELECT ?audit ?version ?updateSpec
+WHERE {
+  {{#version}}FILTER(?version = "{{ version }}"){{/version}}
+  ?audit a audit:Update ;
+  	audit:updateSpecification ?updateSpec ;
+  	audit:updateVersion ?version ;
+  	audit:occurredDate ?occurredDate .
+}
+ORDER BY DESC(?occurredDate)
+LIMIT 1

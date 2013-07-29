@@ -1,0 +1,9 @@
+SELECT ?graph ?graphType ?locator
+FROM <http://www.ontotext.com/explicit>
+WHERE {
+  GRAPH ?graph {
+    ?locatorUri <http://www.bbc.co.uk/ontologies/cms/locator> ?locator .
+    ?graph <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?graphType .
+    FILTER ({{#locators}}?locator = <{{ . }}>{{^-last}} || {{/-last}}{{/locators}})
+  }
+}

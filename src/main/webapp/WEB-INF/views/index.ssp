@@ -1,0 +1,69 @@
+<%@ val environment: String %>
+<%@ val baseUrl: String %>
+
+<html>
+  <head>
+    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.2.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      body { padding-top: 60px; }
+      .top { margin-top: 0; }
+      .bottom { margin-bottom: 0; }
+    </style>
+    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.2.2/css/bootstrap-responsive.min.css" rel="stylesheet">
+  <title>Linked Data Writer</title>
+</head>
+<body>
+  <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <a class="brand" href="#"><b>Linked Data Writer</b></a>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    
+    <div class="row">
+      <div class="span8">
+        <div class="well">
+          <h4 class="top">Documentation</h4>
+          <ul class="">
+            <li><a href="https://confluence.dev.bbc.co.uk/pages/viewpage.action?pageId=60477452">Runbook</a></li>
+            <li><a href="https://confluence.dev.bbc.co.uk/display/linkeddata/Linked+Data+Writer">Confluence Page</a></li>
+          </ul>
+          <h4 class="top">Diagnostics</h4>
+          <ul class="">
+            <li><a href="${baseUrl}/ping">Ping</a></li>
+            <li><a href="${baseUrl}/servicestatus">Service Status</a></li>
+            <li><a href="${baseUrl}/scheduled-tasks">Scheduled Tasks</a></li>
+          </ul>
+          <h4>Tools</h4>
+          <ul class="bottom">
+            <li><a href="https://api.${environment}.bbc.co.uk/ldp-mqconsole">ActiveMQ Console</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="span4">
+        <div class="well">
+          <p><b>Need information on how to use our API?</b> Have a look at our interactive API explorer, which 
+          gives up-to-date information on all of our endpoints.</p>
+          <p class="bottom"><a href="${baseUrl}/docs" class="btn btn-block btn-success">API Explorer &rarr;</a></p>
+        </div>
+        <div class="well">
+          <p><b>Operations or 24/7:</b> If you're trying to diagnose a problem with the Linked Data Writer,
+          please refer to our runbook.</p>
+          <p class="bottom"><a href="https://confluence.dev.bbc.co.uk/pages/viewpage.action?pageId=60477452" class="btn btn-block btn-danger">Runbook &rarr;</a></p>
+        </div>
+        <div class="well">
+          <h5 class="top">Other Environments</h5>
+          <div class="btn-group">
+	        <a class="btn #if (environment == "int")btn-primary#end" href="https://api.int.bbc.co.uk/ldp-writer">INT</a>
+	        <a class="btn #if (environment == "test")btn-primary#end" href="https://api.test.bbc.co.uk/ldp-writer">TEST</a>
+	        <a class="btn #if (environment == "stage")btn-primary#end" href="https://api.stage.bbc.co.uk/ldp-writer">STAGE</a>
+	        <a class="btn #if (environment == "live")btn-primary#end" href="https://api.live.bbc.co.uk/ldp-writer">LIVE</a>
+	      </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

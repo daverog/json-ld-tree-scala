@@ -1,0 +1,17 @@
+<% import bbc.linkeddata.writer.api.docs.Documentation._ %>
+<%@ val apis: List[Api] %>
+<%@ val baseUrl: String %>
+
+{
+    "apiVersion": "1",
+    "basePath": "${baseUrl}",
+    "swaggerVersion": "1.0",
+    "apis": [
+        #for (api <- apis)
+        {
+            "description": "${api.description}",
+            "path": "/swagger${api.path}"
+        #if (api == apis.last) } #else }, #end
+        #end
+    ]
+}

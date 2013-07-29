@@ -1,0 +1,50 @@
+<% import java.text.DateFormat %>
+<% import bbc.linkeddata.writer.api.Task %>
+
+<%@ val dateFormat: DateFormat %>
+<%@ val tasks: Seq[Task] %>
+
+<html>
+  <head>
+    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.2.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      body { padding-top: 60px; }
+      .top { margin-top: 0; }
+      .bottom { margin-bottom: 0; }
+    </style>
+    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.2.2/css/bootstrap-responsive.min.css" rel="stylesheet">
+  <title>Linked Data Writer</title>
+</head>
+<body>
+  <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <a class="brand" href="#"><b>Linked Data Writer</b></a>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+  	<h2>Scheduled Tasks</h2>
+  	<table class="table">
+	  <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Last Run</th>
+          <th>Next Run</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          #for (task <- tasks)
+            <td>${task.name}</td>
+            <td>${task.description}</td>
+            <td>#if (task.lastRun != null)${dateFormat.format(task.lastRun)} #end</td>
+            <td>#if (task.nextRun != null)${dateFormat.format(task.nextRun)} #end</td>
+          #end
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

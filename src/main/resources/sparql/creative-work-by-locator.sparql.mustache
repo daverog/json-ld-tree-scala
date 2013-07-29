@@ -1,0 +1,68 @@
+PREFIX cwork: <http://www.bbc.co.uk/ontologies/creativework/>
+PREFIX bbc: <http://www.bbc.co.uk/ontologies/bbc/> 
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX cms: <http://www.bbc.co.uk/ontologies/cms/> 
+PREFIX provenance: <http://www.bbc.co.uk/ontologies/provenance/> 
+
+
+CONSTRUCT {
+  ?cWork a ?type;
+    a ?type ;
+    cwork:title ?title ;
+    cwork:shortTitle ?shortTitle ;
+    cwork:description ?description ;
+    cwork:dateModified ?dateModified ;
+    cwork:dateCreated ?dateCreated ;
+    cwork:primaryFormat ?format ;
+    cwork:audience ?audience ;
+    cms:locator ?locator ;
+    cwork:about ?about ;
+    cwork:mentions ?mentions ;
+    cwork:category ?category ;
+    bbc:primaryContentOf ?pco .
+  ?locator a ?locatorType .
+  ?pco bbc:webDocumentType ?webDocType .
+  ?provenance a provenance:CreativeWorkGraph ;
+    provenance:provider ?provider ;
+    provenance:provided ?provided .
+  ?cWork cwork:thumbnail ?thumbnail .
+  ?thumbnail a cwork:Thumbnail ;
+    cwork:thumbnailType ?thumbnailType ;
+    cwork:altText ?thumbnailAltText .
+} WHERE {
+  GRAPH ?g {
+    ?cWork a ?type ;
+      cwork:title ?title ;
+      cwork:dateModified ?dateModified ;
+      cms:locator ?locator ;
+      cms:locator ?requiredLocator .
+    {
+      OPTIONAL { ?locator cms:locatorType ?oldType . }
+      ?locator a ?locatorType . FILTER(!BOUND(?oldType))
+    } UNION {
+        ?locator a cms:Locator ;
+          cms:locatorType ?locatorType .
+    }
+    ?provenance a provenance:CreativeWorkGraph ;
+      provenance:provider ?provider ; 
+      provenance:provided ?provided .
+    OPTIONAL { ?cWork cwork:shortTitle ?shortTitle . }
+    OPTIONAL { ?cWork cwork:dateCreated ?dateCreated . }
+    OPTIONAL { ?cWork cwork:about ?about . }
+    OPTIONAL { ?cWork cwork:mentions ?mentions . }
+    OPTIONAL { ?cWork cwork:primaryFormat ?format . }
+    OPTIONAL { ?cwork cwork:description ?description . }
+    OPTIONAL { ?cWork cwork:audience ?audience . }
+    OPTIONAL { ?cWork cwork:category ?category . }
+    OPTIONAL {
+      ?cWork bbc:primaryContentOf ?pco .
+      ?pco bbc:webDocumentType ?webDocType .
+    }
+    OPTIONAL {
+      ?cWork cwork:thumbnail ?thumbnail .
+      ?thumbnail cwork:thumbnailType ?thumbnailType ;
+        cwork:altText ?thumbnailAltText .
+    }
+  }
+  FILTER ({{#locators}}?requiredLocator = <{{ . }}>{{^-last}} || {{/-last}}{{/locators}})
+}

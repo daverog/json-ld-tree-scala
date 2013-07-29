@@ -1,0 +1,37 @@
+<creativeWork {{#guid}}guid="{{ guid }}"{{/guid}} {{#created}}created="{{created }}"{{/created}} {{#modified}}modified="{{ modified }}"{{/modified}} type="{{ type }}" >
+  <title>{{ title }}</title>
+  {{#shortTitle}}<shortTitle>{{ shortTitle }}</shortTitle>{{/shortTitle}}
+  {{#description}}<description>{{ description }}</description>{{/description}}
+  {{#primaryContentOf}}
+  	{{#-first}}<primaryContentOf>{{/-first}}
+      <webDocument type="{{ webDocumentType }}">{{ subject }}</webDocument>
+    {{#-last}}</primaryContentOf>{{/-last}}
+  {{/primaryContentOf}}
+  {{#thumbnails}}
+  	{{#-first}}<thumbnails>{{/-first}}
+  	<thumbnail altText="{{ altText }}" type="{{ type }}">{{ url }}</thumbnail>
+  	{{#-last}}</thumbnails>{{/-last}}
+  {{/thumbnails}}
+  {{#format}}
+    <format>{{ format }}</format>
+  {{/format}}
+  {{#audience}}
+    <audience>{{ audience }}</audience>
+  {{/audience}}
+  {{#category}}
+    <category>{{ category }}</category>
+  {{/category}}
+  <tags>
+    {{#about}}
+      <tag type="about">{{ . }}</tag>
+    {{/about}}
+    {{#mentions}}
+      <tag type="mentions">{{ . }}</tag>
+    {{/mentions}}    
+  </tags>
+  {{#locators}}
+  	{{#-first}}<locators>{{/-first}}
+  	  <locator type="{{ type }}">{{uri}}</locator>
+  	{{#-last}}</locators>{{/-last}}
+  {{/locators}}
+</creativeWork>
