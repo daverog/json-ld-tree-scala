@@ -1,6 +1,0 @@
-CONSTRUCT {
-  ?uri <http://www.bbc.co.uk/ontologies/coreconcepts/sameAs> ?sameAs .
-} WHERE {
-  ?uri <http://www.bbc.co.uk/ontologies/coreconcepts/sameAs> ?sameAs .
-  FILTER ({{#sameAs}}?sameAs = <{{ . }}>{{^-last}} || {{/-last}}{{/sameAs}})
-}
