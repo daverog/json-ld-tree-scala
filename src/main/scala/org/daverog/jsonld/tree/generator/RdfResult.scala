@@ -16,7 +16,7 @@ import com.hp.hpl.jena.rdf.model.Statement
 
 object RdfResult {
   
-  val ResultOntologyPrefix: String = "http://www.bbc.co.uk/ontologies/result/"
+  val ResultOntologyPrefix: String = "http://purl.org/ontology/rdf-result/"
   val RdfPrefix: String = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   val RdfType: String = RdfPrefix + "type"
   val OwlPrefix: String = "http://www.w3.org/2002/07/owl#"

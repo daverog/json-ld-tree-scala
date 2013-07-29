@@ -10,9 +10,9 @@ import net.liftweb.json._
 import net.liftweb.json.Extraction._
 import scala.xml.Node
 import scala.xml.PrettyPrinter
-import org.daverog.jsonld.tree.generator.RdfResult
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import org.daverog.jena.utils.ModelUtils
 
 @RunWith(classOf[JUnitRunner])
 class RdfResultSpec extends FunSpec with MustMatchers with BeforeAndAfter {
@@ -34,7 +34,7 @@ class RdfResultSpec extends FunSpec with MustMatchers with BeforeAndAfter {
       intercept[IllegalArgumentException] {
         generateJsonLd(
 		  """
-		    @prefix result: <http://www.bbc.co.uk/ontologies/result/> .
+		    @prefix result: <http://purl.org/ontology/rdf-result/> .
 		    result:this result:item <urn:a> .
 		    result:this result:item <urn:b> .
 		    <urn:a> <urn:b> <urn:c> .
@@ -51,7 +51,7 @@ class RdfResultSpec extends FunSpec with MustMatchers with BeforeAndAfter {
 	    }
 	  """).must(equal(generateJsonLd(
 	  """
-	    @prefix result: <http://www.bbc.co.uk/ontologies/result/> .
+	    @prefix result: <http://purl.org/ontology/rdf-result/> .
 	    result:this result:item <urn:a> .
 	    <urn:a> <urn:b> <urn:c> .
 	  """
@@ -68,7 +68,7 @@ class RdfResultSpec extends FunSpec with MustMatchers with BeforeAndAfter {
 		}
 	  """).must(equal(generateJsonLd(
 	  """
-		@prefix result: <http://www.bbc.co.uk/ontologies/result/> .
+		@prefix result: <http://purl.org/ontology/rdf-result/> .
 		result:this result:item <urn:c> .
 		<urn:a> <urn:b> <urn:c> .
 	  """
@@ -88,7 +88,7 @@ class RdfResultSpec extends FunSpec with MustMatchers with BeforeAndAfter {
           <context></context>
         </xml-ld>).must(equal(generateXmlLd(
 	  """
-		@prefix result: <http://www.bbc.co.uk/ontologies/result/> .
+		@prefix result: <http://purl.org/ontology/rdf-result/> .
 		result:this result:item <urn:a> .
 		<urn:a> <urn:b> <urn:c> .
 	  """
@@ -105,7 +105,7 @@ class RdfResultSpec extends FunSpec with MustMatchers with BeforeAndAfter {
           <context></context>
         </xml-ld>).must(equal(generateXmlLd(
 	  """
-		@prefix result: <http://www.bbc.co.uk/ontologies/result/> .
+		@prefix result: <http://purl.org/ontology/rdf-result/> .
 		result:this result:item <urn:a> .
 		<urn:a> <urn:b> 'string & - string' .
 	  """

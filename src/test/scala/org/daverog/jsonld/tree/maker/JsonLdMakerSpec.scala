@@ -9,9 +9,9 @@ import org.scalatest.BeforeAndAfter
 import net.liftweb.json._
 import net.liftweb.json.Extraction._
 import net.liftweb.json.JsonDSL._
-import org.daverog.jsonld.tree.maker.JsonLdMaker
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import org.daverog.jena.utils.ModelUtils
 
 
 @RunWith(classOf[JUnitRunner])
@@ -39,7 +39,7 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
     it("extracts an optional URI from a result item"){
       assertJsonLdMadeCorrectly(
 		"""
-		@prefix result: <http://www.bbc.co.uk/ontologies/result/> .
+		@prefix result: <http://purl.org/ontology/rdf-result/> .
 		result:this result:item <urn:a> .
 		""", 
 		"""
@@ -56,7 +56,7 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
 	it("extracts a required URI from a result item"){
       assertJsonLdMadeCorrectly(
 		"""
-		@prefix result: <http://www.bbc.co.uk/ontologies/result/> .
+		@prefix result: <http://purl.org/ontology/rdf-result/> .
 		result:this result:item <urn:a> .
 		""", 
 		"""
@@ -84,7 +84,7 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
 	  intercept[IllegalArgumentException] {
 	    assertJsonLdMadeCorrectly(
 	      """
-		  @prefix result: <http://www.bbc.co.uk/ontologies/result/> .
+		  @prefix result: <http://purl.org/ontology/rdf-result/> .
 		  result:this result:item <urn:a> .
 		  """, 
 		  """
@@ -97,7 +97,7 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
 	it("extracts a required field value from a result item"){
       assertJsonLdMadeCorrectly(
 		"""
-		@prefix result: <http://www.bbc.co.uk/ontologies/result/> .
+		@prefix result: <http://purl.org/ontology/rdf-result/> .
 		result:this result:item <urn:a> .
         <urn:a> <urn:b> "value" .
 		""", 
@@ -115,7 +115,7 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
     it("extracts an optional field value from a result item"){
       assertJsonLdMadeCorrectly(
 		"""
-		@prefix result: <http://www.bbc.co.uk/ontologies/result/> .
+		@prefix result: <http://purl.org/ontology/rdf-result/> .
 		result:this result:item <urn:a> .
         <urn:a> <urn:b> "value" .
 		""", 
@@ -133,7 +133,7 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
     it("extracts a required field URI value from a result item"){
       assertJsonLdMadeCorrectly(
 		"""
-		@prefix result: <http://www.bbc.co.uk/ontologies/result/> .
+		@prefix result: <http://purl.org/ontology/rdf-result/> .
 		result:this result:item <urn:a> .
         <urn:a> <urn:b> <urn:c> .
 		""", 
@@ -161,7 +161,7 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
     it("fails if a URI is expected (because the predicate has @type = @id) but a literal is found"){
       intercept[IllegalArgumentException] { assertJsonLdMadeCorrectly(
 		"""
-		@prefix result: <http://www.bbc.co.uk/ontologies/result/> .
+		@prefix result: <http://purl.org/ontology/rdf-result/> .
 		result:this result:item <urn:a> .
         <urn:a> <urn:b> "value" .
 		""", 
