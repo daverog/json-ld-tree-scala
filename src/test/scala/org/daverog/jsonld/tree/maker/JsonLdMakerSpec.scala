@@ -18,24 +18,6 @@ import org.daverog.jena.utils.ModelUtils
 class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
   
   describe("JsonLdMaker.populateScaffold") {
-    it("does not change an empty scaffold and model"){
-      assertJsonLdMadeCorrectly("", "{\n  \n}", "{\n  \n}")
-    }
-    it("does not change an empty scaffold and model with data"){
-      assertJsonLdMadeCorrectly("<urn:a> <urn:b> <urn:c> .", "{\n  \n}", "{\n  \n}")
-    }
-    it("does not change an scaffold with empty model"){
-      assertJsonLdMadeCorrectly("", "{\n  \"a\":\"b\"\n}", "{\n  \"a\":\"b\"\n}")
-    }
-    it("ignores an absent optional field value from a result item"){
-      assertJsonLdMadeCorrectly("", 
-		"""
-	    {
-		  "@id": "@optional"
-		}
-	    """,
-	    "{}")
-    }
     it("extracts an optional URI from a result item"){
       assertJsonLdMadeCorrectly(
 		"""
@@ -44,7 +26,7 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
 		""", 
 		"""
 		{
-		  "@id": "@optional"
+		  "@id": "$optional"
 		}
 		""",
 		"""
@@ -61,7 +43,7 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
 		""", 
 		"""
 		{
-		  "@id": "@required"
+		  "@id": "$required"
 		}
 		""",
 		"""
@@ -75,7 +57,7 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
         assertJsonLdMadeCorrectly("", 
 		  """
 	  	  { 
-		    "@id": "@required"
+		    "@id": "$required"
 	  	  }
 		  """, "")
       }.getMessage must include("The root node was not indicated by the result ontology")
@@ -89,7 +71,7 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
 		  """, 
 		  """
 	      { 
-		    "field": "@required"
+		    "field": "$required"
 		  }
 		  """, "")
 		}.getMessage must include("The field 'field' is not present")
@@ -103,7 +85,7 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
 		""", 
 		"""
 		{
-		  "urn:b": "@required"
+		  "urn:b": "$required"
 		}
 		""",
 		"""
@@ -121,7 +103,7 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
 		""", 
 		"""
 		{
-		  "urn:b": "@optional"
+		  "urn:b": "$optional"
 		}
 		""",
 		"""
@@ -139,7 +121,7 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
 		""", 
 		"""
 		{
-		  "urn:b": "@required"
+		  "urn:b": "$required"
 		  "@context": {
 		    "urn:b": {
 		      "@type": "@id"
@@ -167,14 +149,104 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
 		""", 
 		"""
 		{
-		  "urn:b": "@required"
+		  "urn:b": "$required",
 		  "@context": {
 		    "urn:b": {
 		      "@type": "@id"
             }
           }
 		}
-		""", "")}.getMessage must include("The field 'urn:b' contains a literal when a URI was expected")
+		""", "")}.getMessage must include("A literal in the RDF was defined as a resource in the @context")
+    }
+    it("extracts an optional URI from a result item into an array"){
+      assertJsonLdMadeCorrectly(
+		"""
+		@prefix result: <http://purl.org/ontology/rdf-result/> .
+		result:this result:item <urn:a> .
+        <urn:a> <urn:b> <urn:c> .
+		""", 
+		"""
+		{
+		  "urn:b": [ "$optional" ]
+		}
+		""",
+		"""
+		{
+		  "urn:b": [ "urn:c" ]
+		}
+		""")
+    }
+    it("extracts optional URIs from a result item into an array"){
+      assertJsonLdMadeCorrectly(
+		"""
+		@prefix result: <http://purl.org/ontology/rdf-result/> .
+		result:this result:item <urn:a> .
+        <urn:a> <urn:b> <urn:c> .
+        <urn:a> <urn:b> <urn:d> .
+		""", 
+		"""
+		{
+		  "urn:b": [ "$optional" ]
+		}
+		""",
+		"""
+		{
+		  "urn:b": [ "urn:c", "urn:d" ]
+		}
+		""")
+    }
+    it("extracts required URIs from a result item into an array"){
+      assertJsonLdMadeCorrectly(
+		"""
+		@prefix result: <http://purl.org/ontology/rdf-result/> .
+		result:this result:item <urn:a> .
+        <urn:a> <urn:b> <urn:c> .
+        <urn:a> <urn:b> <urn:d> .
+		""", 
+		"""
+		{
+		  "urn:b": []
+		}
+		""",
+		"""
+		{
+		  "urn:b": [ "urn:c", "urn:d" ]
+		}
+		""")
+    }
+    it("extracts required URIs from a result item into an array defined by $array"){
+      assertJsonLdMadeCorrectly(
+		"""
+		@prefix result: <http://purl.org/ontology/rdf-result/> .
+		result:this result:item <urn:a> .
+        <urn:a> <urn:b> <urn:c> .
+        <urn:a> <urn:b> <urn:d> .
+		""", 
+		"""
+		{
+		  "urn:b": { "$array" : "true" }
+		}
+		""",
+		"""
+		{
+		  "urn:b": [ "urn:c", "urn:d" ]
+		}
+		""")
+    }
+    it("fails if an $only field has more than one value"){
+      intercept[IllegalArgumentException] { assertJsonLdMadeCorrectly(
+		"""
+		@prefix result: <http://purl.org/ontology/rdf-result/> .
+		result:this result:item <urn:a> .
+        <urn:a> <urn:b> <urn:c> .
+        <urn:a> <urn:b> <urn:d> .
+		""", 
+		"""
+		{
+		  "urn:b": "$only"
+		}
+		""","")
+      }.getMessage must include("A field defined as 'only' cannot have 2 values")
     }
   }
   
@@ -185,5 +257,22 @@ class JsonLdMakerSpec extends FunSpec with MustMatchers with BeforeAndAfter {
   
   def prettifyJson(json: String): String = {
     pretty(render(parse(json)))
+  }
+  
+  def ideas = {
+    """
+    [] == { "$array" : "true" }
+    [ "hello" ] == { 
+      "$array" : "true" ,
+      "$defaultContents" : [ "hello" ]
+    }
+    
+	"$array" : "true",
+	"$minSize" : 1,
+	"$maxSize" : 2,
+	"$truncate" : 3
+    "$hideIfEmpty" : "true"
+    "$defaultContents" : ["a", "b"]
+    """
   }
 }

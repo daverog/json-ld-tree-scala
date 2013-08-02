@@ -5,13 +5,24 @@
  */
 package org.daverog.jsonld.tree.maker
 
-import com.hp.hpl.jena.rdf.model.Model
-import com.hp.hpl.jena.rdf.model.Statement
-import com.hp.hpl.jena.rdf.model.RDFNode
 import scala.collection.JavaConversions
-import net.liftweb.json._
-import net.liftweb.json.Extraction._
+
 import org.daverog.jsonld.tree.generator.ProcessedModel
+
+import com.hp.hpl.jena.rdf.model.Model
+import com.hp.hpl.jena.rdf.model.RDFNode
+import com.hp.hpl.jena.rdf.model.Statement
+
+import net.liftweb.json.DefaultFormats
+import net.liftweb.json.JArray
+import net.liftweb.json.JField
+import net.liftweb.json.JNothing
+import net.liftweb.json.JObject
+import net.liftweb.json.JString
+import net.liftweb.json.JValue
+import net.liftweb.json.parse
+import net.liftweb.json.pretty
+import net.liftweb.json.render
 
 object JsonLdMaker {
   
@@ -20,52 +31,99 @@ object JsonLdMaker {
   val RdfType: String = RdfPrefix + "type"
   val OwlPrefix: String = "http://www.w3.org/2002/07/owl#"
   
-  private def populateScaffold(model: ProcessedModel, context: JsonLdContext, nodeUri: Option[String], scaffold: JValue, parentUri: Option[String]): JValue = {
+  private def populateScaffold(model: ProcessedModel, context: JsonLdContext, nodeUri: String, scaffold: JValue, parentUri: Option[String]): JValue = {
     scaffold.transform({
-      case JField("@id", JString("@optional")) => nodeUri match {
-        case None => JNothing
-        case Some(uri) => JField("@id", JString(uri))
+      case JField(fieldUri, JString(fieldValue)) => {
+        getFieldValue(model, context, fieldUri, fieldValue, nodeUri, parentUri) match {
+	      case JNothing => JNothing
+	      case JString(value) => JField(fieldUri, JString(value))
+	      case JArray(list) => JField(fieldUri, JArray(list))
+	    }
       }
-      case JField("@id", JString("@required")) => nodeUri match {
-        case None => parentUri match {
-          case None => throw new IllegalArgumentException("The root node was not indicated by the result ontology")
-    	  case Some(uri) => throw new IllegalArgumentException("@value required for @id within node: " + uri)
-        }
-        case Some(uri) => JField("@id", JString(uri))
-      }
-      case JField(fieldName, JString("@optional")) => getField(model, context, fieldName, nodeUri, parentUri, false)
-      case JField(fieldName, JString("@required")) => getField(model, context, fieldName, nodeUri, parentUri, true)
+      case JField(fieldUri, JArray(list)) => JField(fieldUri, getArray(model, context, fieldUri, list, nodeUri, parentUri))
+      case JField(fieldUri, JObject(obj)) => JField(fieldUri, getObject(model, context, fieldUri, obj, nodeUri, parentUri))
     })
   }
 
-  private def getField(model: ProcessedModel, context: JsonLdContext, fieldUri: String, nodeUri: Option[String], parentUri: Option[String], required: Boolean): JValue = {
-    val predicateMap: Map[String, Seq[RDFNode]] = nodeUri match {
-      case None => Map()
-      case Some(nodeUri) => model.nonTypeObjectsBySubject.get(nodeUri).getOrElse(Map())
+  private def getObject(model: ProcessedModel, context: JsonLdContext, fieldUri: String, list: List[JField], nodeUri: String, parentUri: Option[String]): JValue = {
+    val isArray =  list.contains(JField("$array", JString("true")))
+    
+    isArray match {
+      case true  => getArray(model, context, fieldUri, List(), nodeUri, parentUri)
+      case false => JObject(list)
     }
+  }
+  
+  private def getArray(model: ProcessedModel, context: JsonLdContext, fieldUri: String, defaultContents: List[JValue], nodeUri: String, parentUri: Option[String]): JValue = {
+    val predicateMap: Map[String, Seq[RDFNode]] = model.nonTypeObjectsBySubject.get(nodeUri).getOrElse(Map())
+    val fieldValues: List[RDFNode] = predicateMap.get(fieldUri).getOrElse(List()).toList.sortBy(rdfNodeToSortableString(_))
+    
+    val fieldValuesContainsOnlyResources = fieldValues.foldLeft(true)((onlyResources, fieldValue) => fieldValue.isResource && onlyResources)
+    
+    (fieldValuesContainsOnlyResources, isPredicateRangeResource(context, fieldUri)) match {
+      case (true,  Some(false)) => invalid("A resource in the RDF was defined as a literal value in the @context", nodeUri, parentUri)
+      case (false, Some(true))  => invalid("A literal in the RDF was defined as a resource in the @context", nodeUri, parentUri)
+      case (true,  _)           => JArray(fieldValues.map(fieldValue => JString(fieldValue.asResource.getURI)))
+      case (false, _)           => JArray(fieldValues.map(fieldValue => JString(fieldValue.asLiteral.getString)))
+    }
+  }
+  
+  private def rdfNodeToSortableString(node: RDFNode): String = {
+    node.isResource match {
+      case true  => node.asResource.getURI
+      case false => node.asLiteral.getString
+    }
+  }
+  
+  private def getFieldValue(model: ProcessedModel, context: JsonLdContext, fieldUri: String, fieldValue: String, nodeUri: String, parentUri: Option[String]): JValue = {
+    val (required, only) = fieldValue match {
+      case "$required" => (true,  false)
+      case "$optional" => (false, false)
+      case "$only"     => (false, true)
+      case _ => return JString(fieldValue)
+    } 
+
+    if (fieldUri == "@id") return JString(nodeUri)
+     
+    val predicateMap: Map[String, Seq[RDFNode]] = model.nonTypeObjectsBySubject.get(nodeUri).getOrElse(Map())
     val fieldValues: List[RDFNode] = predicateMap.get(fieldUri).getOrElse(List()).toList
+    
     fieldValues match {
       case Nil => required match {
         case true => invalid("The field '%s' is not present, but required".format(fieldUri), nodeUri, parentUri)
-          
         case false => JNothing
       }
-      case item :: Nil => (item.isResource, isPredicateRangeResource(context, fieldUri)) match {
-        case (true,  true)  => JField(fieldUri, JString(item.asResource.getURI))
-        case (true,  false) => invalid("A resource in the RDF was defined as a literal value in the @context", nodeUri, parentUri)
-        case (false, true)  => invalid("A literal in the RDF was defined as a resource in the @context", nodeUri, parentUri)
-        case (false, false) => JField(fieldUri, JString(item.asLiteral.getString))
-      }
+      case item :: Nil => getJStringFromRDFNode(item, isPredicateRangeResource(context, fieldUri), nodeUri, parentUri)
+      case item :: items => {
+        only match {
+          case true => throw new IllegalArgumentException("A field defined as 'only' cannot have %s values".format(fieldValues.size))
+          case false => getJStringFromRDFNode(item, isPredicateRangeResource(context, fieldUri), nodeUri, parentUri)
+        }
+      } 
     }
   }
   
-  def invalid(message: String, nodeUri: Option[String], parentUri: Option[String]) = {
-    throw new IllegalArgumentException("%s within %s".format(message, describeNode(nodeUri), describeParent(parentUri)))
+  private def getJStringFromRDFNode(item: RDFNode, contextDeclaresItemAsResource: Option[Boolean], nodeUri: String, parentUri: Option[String]) = {
+    (item.isResource, contextDeclaresItemAsResource) match {
+        case (true,  Some(false)) => invalid("A resource in the RDF was defined as a literal value in the @context", nodeUri, parentUri)
+        case (false, Some(true))  => invalid("A literal in the RDF was defined as a resource in the @context", nodeUri, parentUri)
+        case (true,  _)           => JString(item.asResource.getURI)
+        case (false, _)           => JString(item.asLiteral.getString)
+      }
   }
   
-  private def isPredicateRangeResource(context: JsonLdContext, fieldUri: String): Boolean = {
-    //context.`@context`.get(fieldUri).map(_.)  //<<< working here!!!
-    true
+  private def invalid(message: String, nodeUri: String, parentUri: Option[String]) = {
+    throw new IllegalArgumentException("%s, within %s".format(message, describeNode(nodeUri), describeParent(parentUri)))
+  }
+  
+  private def isPredicateRangeResource(context: JsonLdContext, fieldUri: String): Option[Boolean] = {
+    context.getField(fieldUri) match {
+      case None => None
+      case Some(field) => field.`@type` match {
+        case None => None
+        case Some(t) => Some(t == "@id")
+      }
+    }
   }
   
   private def describeParent(parentUri: Option[String]): String = {
@@ -75,12 +133,9 @@ object JsonLdMaker {
     }
   }
 
-  private def describeNode(nodeUri: Option[String]): String = {
-	nodeUri match {
-	  case None => "no defined position"
-	  case Some(nodeUri) => "node <%s>".format(nodeUri)
+  private def describeNode(nodeUri: String): String = {
+	"node <%s>".format(nodeUri)
   }
-}
   
   object StatementType extends Enumeration {
     type StatementType = Value
@@ -98,7 +153,10 @@ object JsonLdMaker {
     implicit val formats = DefaultFormats
     val scaffold = parse(jsonScaffold)
     
-    val context = scaffold.extract[JsonLdContext]
+    val context = scaffold match {
+      case JNothing => JsonLdContext(None)
+      case _ => scaffold.extract[JsonLdContext]
+    }
     
 	val categorisedStatements: Seq[(StatementType, Statement)] = JavaConversions
 		.collectionAsScalaIterable(model.listStatements.toList).toList
@@ -130,8 +188,10 @@ object JsonLdMaker {
 	})
 	
 	val processedModel = ProcessedModel(types, nonTypeObjectsBySubject, subjectsByObject)
+	
+	if (items.isEmpty) throw new IllegalArgumentException("The root node was not indicated by the result ontology")
     
-    pretty(render(populateScaffold(processedModel, context, items.headOption, scaffold, None)))
+    pretty(render(populateScaffold(processedModel, context, items.head, scaffold, None)))
   }
     
   def categoriseStatement(statement: Statement): StatementType = {
@@ -164,6 +224,13 @@ object JsonLdMaker {
 }
 
 
-case class JsonLdContext(`@context`: Map[String, JsonLdContextReference])
-case class JsonLdContextReference(`@id`: String, `@type`: String)
+case class JsonLdContext(`@context`: Option[Map[String, JsonLdContextReference]]) {
+  def getField(fieldUri: String): Option[JsonLdContextReference] = {
+    `@context` match {
+      case None => None
+      case _ => `@context`.get.get(fieldUri)
+    }
+  }  
+}
 
+case class JsonLdContextReference(`@id`: Option[String], `@type`: Option[String])

@@ -190,19 +190,19 @@ object RdfResult {
   
   def getChildrenOfTreeBasedOnModel(tree: RdfTree, model: ProcessedModel): Map[Predicate, Seq[RdfTree]] = {
     val nodeUri = tree.value.get.asInstanceOf[URI].uri
-    val objects = model.nonTypeObjectsBySubject.get(nodeUri).getOrElse(Seq())
-    val subjects = model.subjectsByObject.get(nodeUri).getOrElse(Seq())
+    val objectsWhereNodeIsSubject= model.nonTypeObjectsBySubject.get(nodeUri).getOrElse(Seq())
+    val subjectsWhereNodeIsObject = model.subjectsByObject.get(nodeUri).getOrElse(Seq())
     val types = model.types.get(nodeUri).getOrElse(Seq())
 		
     val singleType = types.headOption
 			
-    val children = objects.map({
+    val children = objectsWhereNodeIsSubject.map({
 	  case (predicateUri, objectNodes) => {
 	    Predicate(predicateUri, false) -> objectNodes.map(objectNode => RdfTree(Some(tree), Some(rdfNodeToValue(objectNode)), false))
 	  }
 	}).toMap
 
-	val inverseChildren = subjects.map({
+	val inverseChildren = subjectsWhereNodeIsObject.map({
 	  case (predicateUri, subjects) => {
 		Predicate(predicateUri, true) -> subjects.map(subject => RdfTree(Some(tree), Some(URI(subject)), false))
 	  }
